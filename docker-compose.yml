@@ -1,33 +1,49 @@
+# docker-compose.yml  (Compose v2 – no "version:" needed)
+
+networks:
+  traefik_net:              # shared with Traefik
+    external: true
+    name: root_default      # <-- change to your real Traefik network if different
+  internal_net:             # private net for backend <-> db
+    driver: bridge
+
+volumes:
+  newsite_db:               # unique Postgres volume
 
 services:
-  postgres:
-    image: postgres:15-alpine
+  db:
+    image: postgres:17-alpine
     restart: unless-stopped
+    env_file: .env
     environment:
       POSTGRES_DB:       ${POSTGRES_DB}
       POSTGRES_USER:     ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - dbdata:/var/lib/postgresql/data
+      - newsite_db:/var/lib/postgresql/data
     networks:
-      - traefik_net
+      - internal_net
 
   backend:
-    build: ./backend           # ← fix: correct build context
+    build: ./backend
     restart: unless-stopped
+    env_file: .env
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      PORT: 4000
+      PORT: 5000
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     depends_on:
-      - postgres
+      - db
     networks:
+      - internal_net
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`admin.api.nammellaramysuru.in`)"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.services.api.loadbalancer.server.port=5000"  # ← backend port
-      - "traefik.http.routers.api.tls.certresolver=mytlschallenge"   # ← resolver name
+      # Router
+      - "traefik.http.routers.adminapi.rule=Host(`admin.api.nammellaramysuru.in`)"
+      - "traefik.http.routers.adminapi.entrypoints=websecure"
+      - "traefik.http.routers.adminapi.tls.certresolver=mytlschallenge"
+      # Service
+      - "traefik.http.services.adminapi.loadbalancer.server.port=5000"
 
   frontend:
     build: ./frontend
@@ -38,15 +54,7 @@ services:
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web.rule=Host(`www.admin.nammellaramysuru.in`) || Host(`adnin.nammellaramysuru.in`)"
-      - "traefik.http.routers.web.entrypoints=websecure"
-      - "traefik.http.services.web.loadbalancer.server.port=80"
-      - "traefik.http.routers.web.tls.certresolver=mytlschallenge"   # ← resolver name
-
-volumes:
-  dbdata:
-
-networks:
-  traefik_net:
-    external: true
-    name: root_default
+      - "traefik.http.routers.adminweb.rule=Host(`admin.nammellaramysuru.in`)"
+      - "traefik.http.routers.adminweb.entrypoints=websecure"
+      - "traefik.http.routers.adminweb.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.adminweb.loadbalancer.server.port=3000"
