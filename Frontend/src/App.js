@@ -5,14 +5,20 @@ import AuthProvider, { AuthCtx } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 
 import Login from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
+
 import CommunityList from './pages/CommunityList';
 import CommunityForm from './pages/CommunityForm';
 import CommunityEdit from './pages/CommunityEdit';
 
-/* ───────── helper that decides where “/” should go ───────── */
+import EventList from './pages/EventList';
+import EventForm from './pages/EventForm';
+import EventEdit from './pages/EventEdit';
+
+/* ───────── helper that decides where "/" should go ───────── */
 function RootRedirect() {
   const { user } = React.useContext(AuthCtx);
-  return <Navigate to={user ? '/communities' : '/login'} replace />;
+  return <Navigate to={user ? '/dashboard' : '/login'} replace />;
 }
 
 export default function App() {
@@ -26,7 +32,17 @@ export default function App() {
           {/* public */}
           <Route path="/login" element={<Login />} />
 
-          {/* protected list */}
+          {/* ─── Dashboard route ─── */}
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+
+          {/* ─── Community routes ─── */}
           <Route
             path="/communities"
             element={
@@ -35,8 +51,6 @@ export default function App() {
               </PrivateRoute>
             }
           />
-
-          {/* protected new-community form */}
           <Route
             path="/community/new"
             element={
@@ -46,14 +60,41 @@ export default function App() {
             }
           />
           <Route
-          path="/community/:id/edit"
-        element={
-            <PrivateRoute>
-            <CommunityEdit />
-            </PrivateRoute>
+            path="/community/:id/edit"
+            element={
+              <PrivateRoute>
+                <CommunityEdit />
+              </PrivateRoute>
             }
           />
-          {/* catch-all → go to “/” so RootRedirect handles it */}
+
+          {/* ─── Event routes ─── */}
+          <Route
+            path="/events"
+            element={
+              <PrivateRoute>
+                <EventList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/event/new"
+            element={
+              <PrivateRoute>
+                <EventForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/event/:id/edit"
+            element={
+              <PrivateRoute>
+                <EventEdit />
+              </PrivateRoute>
+            }
+          />
+
+          {/* fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

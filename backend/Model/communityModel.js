@@ -5,14 +5,14 @@ const db = require('../Services/db');
 
 const COLUMNS = `
   id, name, category, contact, address, email,
-  social_links, logo, description, create_at,
+  social_links, logo, description, created_at,
   sub_category, image, in_charge
 `;
 
 /* ───────── CRUD ──────────────────────────── */
 
 exports.findAll = async () => {
-  const { rows } = await db.query(`SELECT ${COLUMNS} FROM community ORDER BY create_at DESC`);
+  const { rows } = await db.query(`SELECT ${COLUMNS} FROM community ORDER BY created_at DESC`);
   return rows;
 };
 
@@ -21,7 +21,7 @@ exports.findById = async (id) => {
   return row;
 };
 
-exports.create = async (payload) => {                                       
+exports.create = async (payload) => {
   const {
     name, category, contact, address, email,
     social_links, logo, description, sub_category,
@@ -36,7 +36,7 @@ exports.create = async (payload) => {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
      RETURNING ${COLUMNS}`,
     [
-       name, category, contact, address, email,
+      name, category, contact, address, email,
       social_links, logo, description, sub_category,
       image, in_charge
     ]
@@ -66,10 +66,10 @@ exports.update = async (id, payload) => {
     ]
   );
 
-  return row;                // undefined when not found
+  return row;
 };
 
 exports.remove = async (id) => {
   const { rowCount } = await db.query('DELETE FROM community WHERE id = $1', [id]);
-  return rowCount;           // 0 when not found
+  return rowCount;
 };

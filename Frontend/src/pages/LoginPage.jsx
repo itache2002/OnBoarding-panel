@@ -192,6 +192,9 @@ export default function LoginPage() {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
+
+
+
   const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
@@ -199,7 +202,7 @@ export default function LoginPage() {
     try {
       await login(email.trim(), password);
       // 🎉 success – send user to the protected list
-      navigate("/communities", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       setErr(error?.response?.data?.error || "Login failed");
     } finally {
@@ -320,7 +323,7 @@ export default function LoginPage() {
           />
         </label>
 
-        <label className="login-field">
+         <label className="login-field">
           Password
           <input
             type="password"
@@ -330,6 +333,8 @@ export default function LoginPage() {
             required
           />
         </label>
+
+
 
         {err && <p className="login-error">{err}</p>}
 
