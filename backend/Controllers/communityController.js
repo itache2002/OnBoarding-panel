@@ -119,8 +119,23 @@ exports.update = async (req, res, next) => {
 
 exports.remove = async (req, res, next) => {
   try {
+    const row = await community.findById(req.params.id); // get image info
+    if (!row) return res.status(404).json({ error: 'Not found' });
+
+    // Delete image files if they exist
+    ['image', 'logo'].forEach(field => {
+      if (row[field]) {
+        const imgPath = path.join(__dirname, '..', row[field]);
+        fs.unlink(imgPath, err => {
+          if (err) console.warn(`⚠️ Could not delete ${field} file:`, err.message);
+        });
+      }
+    });
+
     const deleted = await community.remove(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Not found' });
     res.json({ message: 'The record is deleted', status: 'success' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 };
+

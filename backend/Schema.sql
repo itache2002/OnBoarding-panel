@@ -62,3 +62,44 @@ CREATE TABLE public.users (
 
 -- Make sure each email is unique
 CREATE UNIQUE INDEX users_email_uidx ON public.users (email);
+
+
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS public.events (
+id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+event_name varchar(255) NOT NULL,
+event_date date NOT NULL,
+event_time time NOT NULL,
+cost varchar(50) NOT NULL,
+event_image varchar(255) NOT NULL,
+location varchar(255) NOT NULL,
+contact jsonb NOT NULL, -- e.g. {"phone": "...", "whatsapp": "..."}
+category varchar(100) NOT NULL, -- e.g. Wellness, Sports
+sub_category varchar(100) NOT NULL, -- e.g. Art & Hobbies, Cycling
+social_links jsonb, -- e.g. {"instagram": "...", "website": "..."}
+status varchar(20) NOT NULL DEFAULT 'upcoming', -- 'upcoming', 'completed', 'cancelled'
+created_at timestamptz NOT NULL DEFAULT now(),
+priority boolean NOT NULL DEFAULT false
+);
+
+
+
+-- for inserting new event-
+  {
+  "event_name": "Art & Yoga Workshop",
+  "event_date": "2025-08-15",
+  "event_time": "10:30:00",
+  "cost": "Free",
+  "event_image": "https://example.com/art-yoga.jpg",
+  "location": "Community Hall, Main Street",
+  "contact": { "phone": "9876543210", "whatsapp": "9876543210" },
+  "category": "Wellness",
+  "sub_category": "Yoga & Art",
+  "social_links": { "instagram": "art_yoga_insta", "website": "https://artyoga.com" },
+  "status": "upcoming",
+  "priority": false
+}
