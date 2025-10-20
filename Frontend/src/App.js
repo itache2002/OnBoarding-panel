@@ -53,6 +53,7 @@ export default function App() {
             </PrivateRoute>
             }
           />
+  
           {/* catch-all → go to “/” so RootRedirect handles it */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
