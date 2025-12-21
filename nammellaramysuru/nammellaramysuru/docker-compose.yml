@@ -1,0 +1,24 @@
+
+services:
+  nammellaramysuru-web:
+    build: .
+    image: nammellaramysuru-flutter-web:latest
+    container_name: nammellaramysuru-web
+    restart: unless-stopped
+    networks: [traefik_net]
+    expose: ["80"]          # change to "8080" if your app listens on 8080
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=root_default
+
+      - traefik.http.routers.nammellaramysuru.rule=Host(`demo.nammellaramysuru.in`) || Host(`www.demo.nammellaramysuru.in`)
+      - traefik.http.routers.nammellaramysuru.entrypoints=websecure
+      - traefik.http.routers.nammellaramysuru.tls=true
+      - traefik.http.routers.nammellaramysuru.tls.certresolver=mytlschallenge
+
+      - traefik.http.services.nammellaramysuru.loadbalancer.server.port=80   # or 8080
+networks:
+  traefik_net:
+    external: true
+    name: root_default
+

@@ -1,98 +1,13 @@
-  // // models/communityModel.js
-  // const db = require('../Services/db');
 
-  // /* ───────── helpers ───────────────────────── */
-
-  // const COLUMNS = `
-  //   id, name, category, contact, address, email,
-  //   social_links, logo, description, create_at,
-  //   sub_category, image, in_charge
-  // `;
-
-  // /* ───────── CRUD ──────────────────────────── */
-
-  // exports.findAll = async () => {
-  //   const { rows } = await db.query(`SELECT ${COLUMNS} FROM community ORDER BY create_at DESC`);
-  //   return rows;
-  // };
-
-  // exports.findById = async (id) => {
-  //   const { rows: [row] } = await db.query(`SELECT ${COLUMNS} FROM community WHERE id = $1`, [id]);
-  //   return row;
-  // };
-
-  // exports.create = async (payload) => {                                       
-  //   const {
-  //     name, category, contact, address, email,
-  //     social_links, logo, description, sub_category,
-  //     image, in_charge
-  //   } = payload;
-
-  //   const { rows: [row] } = await db.query(
-  //     `INSERT INTO community
-  //       (name, category, contact, address, email,
-  //         social_links, logo, description,
-  //         sub_category, image, in_charge)
-  //     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-  //     RETURNING ${COLUMNS}`,
-  //     [
-  //       name, category, contact, address, email,
-  //       social_links, logo, description, sub_category,
-  //       image, in_charge
-  //     ]
-  //   );
-
-  //   return row;
-  // };
-
-  // exports.update = async (id, payload) => {
-  //   const {
-  //     name, category, contact, address, email,
-  //     social_links, logo, description, sub_category,
-  //     image, in_charge
-  //   } = payload;
-
-  //   const { rows: [row] } = await db.query(
-  //     `UPDATE community SET
-  //       name=$2, category=$3, contact=$4, address=$5, email=$6,
-  //       social_links=$7, logo=$8, description=$9, sub_category=$10,
-  //       image=$11, in_charge=$12
-  //     WHERE id=$1
-  //     RETURNING ${COLUMNS}`,
-  //     [
-  //       id, name, category, contact, address, email,
-  //       social_links, logo, description, sub_category,
-  //       image, in_charge
-  //     ]
-  //   );
-
-  //   return row;                // undefined when not found
-  // };
-
-  // exports.remove = async (id) => {
-  //   const { rowCount } = await db.query('DELETE FROM community WHERE id = $1', [id]);
-  //   return rowCount;           // 0 when not found
-  // };
-
-
-
-  // models/communityModel.js
 'use strict';
 
 const db = require('../Services/db');
 
-/**
- * Columns exposed via the VIEW public.community_enriched
- * (Make sure you've created the view per the SQL I shared earlier.)
- */
 const ENRICHED_COLUMNS = `
   id, name, category, sub_category, description, contact, email, address,
   in_charge, social_links, logo, image, reached_out, created_at
 `;
 
-/* ──────────────────────────────────────────────────────────────────────────
- * Internal helpers
- * ────────────────────────────────────────────────────────────────────────── */
 
 /**
  * Find or create a category by name (case-insensitive).
@@ -151,12 +66,12 @@ async function getOrCreateSubCategoryId(categoryId, subCategoryName) {
  */
 function buildWhereClause(filters = {}) {
   const {
-    category,        // string
-    subCategory,     // string
-    reachedOut,      // boolean
-    q,               // string, search
-    createdFrom,     // ISO date string or Date
-    createdTo        // ISO date string or Date
+    category,        
+    subCategory,     
+    reachedOut,     
+    q,              
+    createdFrom,    
+    createdTo        
   } = filters;
 
   const conditions = [];
@@ -221,9 +136,7 @@ function toJSONText(social_links) {
   return JSON.stringify(social_links);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
- * Query APIs
- * ────────────────────────────────────────────────────────────────────────── */
+
 
 /**
  * List communities with filters + sorting + pagination.
@@ -298,13 +211,7 @@ exports.findById = async (id) => {
   return row;
 };
 
-/**
- * Create a community.
- * You can either:
- *  - pass { sub_category_id }
- *  - OR pass { category, sub_category } (auto find/create & link)
- * Accepts reached_out (bool).
- */
+
 exports.create = async (payload) => {
   const {
     name,
@@ -317,12 +224,11 @@ exports.create = async (payload) => {
     logo,
     image,
 
-    // linking options:
     sub_category_id,
     category,
     sub_category,
 
-    // flags:
+ 
     reached_out = false
   } = payload;
 
@@ -361,12 +267,6 @@ exports.create = async (payload) => {
   return row;
 };
 
-/**
- * Update a community (partial updates supported).
- * To relink:
- *  - provide sub_category_id
- *  - or provide (category + sub_category) to resolve/create and link
- */
 exports.update = async (id, payload) => {
   const {
     name,
@@ -384,14 +284,13 @@ exports.update = async (id, payload) => {
     sub_category
   } = payload;
 
-  // Resolve new sub_category_id if names provided
+
   let newSubCatId = sub_category_id || null;
   if (!newSubCatId && (category || sub_category)) {
     const catId = await getOrCreateCategoryId(category);
     newSubCatId = await getOrCreateSubCategoryId(catId, sub_category);
   }
 
-  // Normalize social links if provided
   const socialLinksJSON =
     typeof social_links === 'undefined' ? null : toJSONText(social_links);
 
@@ -458,11 +357,8 @@ exports.setReachedOut = async (id, value = true) => {
   return enriched;
 };
 
-/* ──────────────────────────────────────────────────────────────────────────
- * Extra utilities (optional but handy for UI filters)
- * ────────────────────────────────────────────────────────────────────────── */
 
-/** List all categories (sorted by name). */
+
 exports.listCategories = async () => {
   const { rows } = await db.query(
     `SELECT id, name, slug, description, created_at FROM categories ORDER BY name ASC`
@@ -470,11 +366,6 @@ exports.listCategories = async () => {
   return rows;
 };
 
-/**
- * List sub-categories. Pass either:
- *  - categoryId, or
- *  - categoryName (case-insensitive)
- */
 exports.listSubCategories = async ({ categoryId, categoryName } = {}) => {
   if (categoryName && !categoryId) {
     const { rows: cat } = await db.query(
